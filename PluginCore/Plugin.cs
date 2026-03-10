@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 using BepInEx;
 using BepInEx.Logging;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Vector2 = UnityEngine.Vector2;
 
 namespace CleanShip
 {
-    [BepInPlugin("me.cleanship.mod", "CleanShip", "1.0.0")]
+    [BepInPlugin("me.cleanship.mod", "CleanShip", "1.0.1")]
     public partial class Plugin : BaseUnityPlugin
     {
         public static ManualLogSource Log;
@@ -28,6 +26,9 @@ namespace CleanShip
         public ItemLocationList customLocations = new ItemLocationList();
         private List<string> detectedShipItemNames = new List<string>();
 
+        // --- 按键绑定 (取代 Update) ---
+        private InputAction menuKeyAction;
+
         private void Awake()
         {
             Instance = this;
@@ -37,26 +38,39 @@ namespace CleanShip
             configPath = Path.Combine(Paths.ConfigPath, "CleanShip_Items.json");
             LoadCustomLocations();
             winRect = new Rect(50, 50, customLocations.winWidth, customLocations.winHeight);
+
+            // 【核心修改】使用事件驱动代替 Update() 轮询
+            menuKeyAction = new InputAction("OpenCleanShipMenu", binding: "<Keyboard>/equals");
+            menuKeyAction.performed += ToggleMenu;
+            menuKeyAction.Enable();
         }
 
-        private void Update()
+        // 当按键被按下时触发的方法
+        private void ToggleMenu(InputAction.CallbackContext context)
         {
-            if (Keyboard.current != null && Keyboard.current.equalsKey.wasPressedThisFrame)
-            {
-                isMenuOpen = !isMenuOpen;
-                Setting.bMenu = isMenuOpen;
+            isMenuOpen = !isMenuOpen;
+            Setting.bMenu = isMenuOpen;
 
-                if (isMenuOpen)
-                {
-                    Cursor.visible = true;
-                    Cursor.lockState = CursorLockMode.None;
-                    RefreshShipItems();
-                }
-                else
-                {
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
-                }
+            if (isMenuOpen)
+            {
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+                RefreshShipItems();
+            }
+            else
+            {
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+            }
+        }
+
+        // 插件卸载或销毁时清理内存
+        private void OnDestroy()
+        {
+            if (menuKeyAction != null)
+            {
+                menuKeyAction.Disable();
+                menuKeyAction.Dispose();
             }
         }
 
