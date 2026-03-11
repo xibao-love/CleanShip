@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 
 namespace CleanShip
 {
-    [BepInPlugin("me.cleanship.mod", "CleanShip", "1.0.1")]
+    [BepInPlugin("me.cleanship.mod", "CleanShip", "1.0.2")]
     public partial class Plugin : BaseUnityPlugin
     {
         public static ManualLogSource Log;
@@ -61,16 +61,6 @@ namespace CleanShip
             {
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
-            }
-        }
-
-        // 插件卸载或销毁时清理内存
-        private void OnDestroy()
-        {
-            if (menuKeyAction != null)
-            {
-                menuKeyAction.Disable();
-                menuKeyAction.Dispose();
             }
         }
 
