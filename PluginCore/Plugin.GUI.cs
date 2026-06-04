@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Linq;
 using UnityEngine;
-using Vector2 = UnityEngine.Vector2; 
+using Vector2 = UnityEngine.Vector2;
+
 namespace CleanShip
 {
     public partial class Plugin
     {
-        private void OnGUI()
+        public void OnGUI()
         {
+            Log.LogInfo($"OnGUI 执行, isMenuOpen={isMenuOpen}");  // 新增
             if (!isMenuOpen) return;
 
             int size = customLocations.fontSize;
@@ -27,8 +29,9 @@ namespace CleanShip
             {
                 winRect = GUILayout.Window(9999, winRect, WindowFunction, "CleanShip 物品整理控制台");
             }
-            catch
+            catch (Exception e)
             {
+                Log.LogError($"窗口绘制异常: {e}");
                 GUI.color = Color.white;
                 GUI.backgroundColor = Color.white;
             }
@@ -44,8 +47,14 @@ namespace CleanShip
             GUI.backgroundColor = Setting.bCleaning ? Color.green : Color.white;
             if (GUILayout.Button(Setting.bCleaning ? "停止整理" : "整理飞船", GUILayout.Height(35)))
             {
-                if (!Setting.bCleaning) StartCoroutine(SortCoroutine());
-                else { Setting.bCleaning = false; StopAllCoroutines(); }
+                // ========== 修改：通过生命周期代理启动/停止协程 ==========
+                if (!Setting.bCleaning)
+                    CleanShipRunner.Instance.StartCoroutine(SortCoroutine());
+                else
+                {
+                    Setting.bCleaning = false;
+                    CleanShipRunner.Instance.StopAllCoroutines();
+                }
             }
 
             GUI.backgroundColor = customLocations.onlySortCustom ? Color.cyan : Color.gray;
@@ -147,7 +156,6 @@ namespace CleanShip
 
             GUILayout.EndVertical();
 
-            // 拖动区域
             GUI.DragWindow(new Rect(0, 0, customLocations.winWidth, 30));
         }
     }

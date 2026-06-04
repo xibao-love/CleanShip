@@ -8,6 +8,23 @@ using UnityEngine.InputSystem;
 
 namespace CleanShip
 {
+    // ========== 新增：生命周期代理类 ==========
+    public class CleanShipRunner : MonoBehaviour
+    {
+        public static CleanShipRunner Instance { get; private set; }
+
+        private void Awake()
+        {
+            Instance = this;
+        }
+
+        private void OnGUI()
+        {
+            Plugin.Instance?.OnGUI();
+        }
+    }
+    // =========================================
+
     [BepInPlugin("me.cleanship.mod", "CleanShip", "1.0.2")]
     public partial class Plugin : BaseUnityPlugin
     {
@@ -35,19 +52,25 @@ namespace CleanShip
             Log = Logger;
             Log.LogInfo(">>> CleanShip 物品整理模组加载中... <<<");
 
+            // ========== 新增：创建生命周期代理 GameObject ==========
+            GameObject runnerGo = new GameObject("CleanShip_LifecycleManager");
+            DontDestroyOnLoad(runnerGo);
+            runnerGo.hideFlags = HideFlags.HideAndDontSave;
+            runnerGo.AddComponent<CleanShipRunner>();
+            // ====================================================
+
             configPath = Path.Combine(Paths.ConfigPath, "CleanShip_Items.json");
             LoadCustomLocations();
             winRect = new Rect(50, 50, customLocations.winWidth, customLocations.winHeight);
 
-            // 【核心修改】使用事件驱动代替 Update() 轮询
             menuKeyAction = new InputAction("OpenCleanShipMenu", binding: "<Keyboard>/equals");
             menuKeyAction.performed += ToggleMenu;
             menuKeyAction.Enable();
         }
 
-        // 当按键被按下时触发的方法
         private void ToggleMenu(InputAction.CallbackContext context)
         {
+            Log.LogInfo("ToggleMenu 被调用！");   // 新增
             isMenuOpen = !isMenuOpen;
             Setting.bMenu = isMenuOpen;
 
