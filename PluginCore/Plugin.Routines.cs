@@ -41,7 +41,7 @@ namespace CleanShip
             GrabbableObject[] items = FindObjectsByType<GrabbableObject>(FindObjectsSortMode.None);
             foreach (var item in items)
             {
-                if (!Setting.bCleaning || player.isPlayerDead || !player.isPlayerControlled || StartOfRound.Instance.inShipPhase == false)
+                if (!Setting.bCleaning || player.isPlayerDead || !player.isPlayerControlled)
                 {
                     break;
                 }
